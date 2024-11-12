@@ -9,14 +9,19 @@ fi
 # Input file name
 input_video="$1"
 
-# Function to generate random values
+# Function to generate random values for contrast, brightness, and saturation
 generate_random_values() {
-  contrast=$(echo "scale=2; $RANDOM % 20 + 50" | bc)  # Random between 50 and 70
-  brightness=$(echo "scale=2; $RANDOM % 40 - 20" | bc)  # Random between -20 and 20
-  saturation=$(echo "scale=2; $RANDOM % 40 + 50" | bc)  # Random between 50 and 90
+  # Generate random contrast between 0.9 and 1.1
+  contrast=$(echo "scale=2; $RANDOM / 32767 * 0.2 + 0.9" | bc)  # Random between 0.9 and 1.1
+  
+  # Generate random brightness between -0.1 and 0.1
+  brightness=$(echo "scale=2; $RANDOM / 32767 * 0.2 - 0.1" | bc)  # Random between -0.1 and 0.1
+  
+  # Generate random saturation between 0.5 and 1.5
+  saturation=$(echo "scale=2; $RANDOM / 32767 + 0.5" | bc)  # Random between 0.5 and 1.5
 }
 
-# Create 3 different output videos
+# Create 3 different output videos with random adjustments
 for i in {1..3}; do
   # Generate random values for contrast, brightness, and saturation
   generate_random_values
@@ -24,8 +29,8 @@ for i in {1..3}; do
   # Output video file name
   output_video="output_${i}_$(basename "$input_video")"
 
-  # Apply the adjustments and save the video
-  ffmpeg -i "$input_video" -vf "eq=contrast=$contrast:brightness=$brightness:saturation=$saturation" -c:a copy "$output_video"
+  # Apply the adjustments and save the video with quiet logging
+  ffmpeg -loglevel quiet -i "$input_video" -vf "eq=contrast=$contrast:brightness=$brightness:saturation=$saturation" -c:a copy "$output_video"
 
   # Output the applied settings
   echo "Generated Video $i with settings:"
