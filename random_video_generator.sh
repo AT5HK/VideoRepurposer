@@ -9,6 +9,18 @@ fi
 # Input file name
 input_video="$1"
 
+# Default number of videos to generate (if not specified)
+num_videos=1
+
+# Parse the "video=" argument if provided
+for arg in "$@"; do
+  case $arg in
+    videos=*)
+      num_videos="${arg#*=}"
+      ;;
+  esac
+done
+
 # Function to generate random values for contrast, brightness, saturation, and scaling
 generate_random_values() {
   # Generate random contrast between 0.9 and 1.1
@@ -40,7 +52,7 @@ generate_random_values() {
 }
 
 # Create 3 different output videos with random adjustments
-for i in {1..3}; do
+for i in $(seq 1 $num_videos); do
   # Generate random values for contrast, brightness, saturation, and scaling
   generate_random_values
 
@@ -48,7 +60,7 @@ for i in {1..3}; do
   output_video="output_${i}_$(basename "$input_video")"
 
   # Apply the adjustments and scaling, then save the video with quiet logging
-  ffmpeg -loglevel warning -i "$input_video" -map_metadata -1 -vf "scale=$new_width:-2,eq=contrast=$contrast:brightness=$brightness:saturation=$saturation" -c:a copy "$output_video"
+  ffmpeg -loglevel warning -i "$input_video" -map_metadata -1 -vf "scale=$new_width:-2,eq=contrast=$contrast:brightness=$brightness:saturation=$saturation" -c:v libx264 -c:a copy "$output_video"
 
   # Output the applied settings
   echo "Generated Video $i with settings:"
