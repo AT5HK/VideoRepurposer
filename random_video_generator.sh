@@ -51,16 +51,31 @@ generate_random_values() {
   new_height=$(echo "scale=2; $new_width * $original_height / $original_width" | bc)
 }
 
-# Create 3 different output videos with random adjustments
+# Function to generate a random string of 6 characters
+generate_random_string() {
+  # Generates a random string of 6 characters (letters and numbers)
+  mktemp -u XXXXXX
+}
+
+# Get the original file extension of the input video
+input_extension="${input_video##*.}"
+
+# Create the output videos with random adjustments
 for i in $(seq 1 $num_videos); do
   # Generate random values for contrast, brightness, saturation, and scaling
   generate_random_values
+  
+  # Generate a random name for the output video (6 alphanumeric characters)
+  random_name=$(generate_random_string)
 
-  # Output video file name
-  output_video="output_${i}_$(basename "$input_video")"
+  # Output video file name using the random string, keeping the original extension
+  output_video="${random_name}.${input_extension}"
 
   # Apply the adjustments and scaling, then save the video with quiet logging
   ffmpeg -loglevel warning -i "$input_video" -map_metadata -1 -vf "scale=$new_width:-2,eq=contrast=$contrast:brightness=$brightness:saturation=$saturation" -c:v libx264 -c:a copy "$output_video"
+
+  # Remove metadata
+  exiftool -all= -overwrite_original "$output_video"
 
   # Output the applied settings
   echo "Generated Video $i with settings:"
@@ -68,7 +83,8 @@ for i in $(seq 1 $num_videos); do
   echo "Brightness: $brightness"
   echo "Saturation: $saturation"
   echo "Width: $new_width, Height: $new_height"
-  echo "Output video: $output_video"
+  echo "name: $output_video"
+  echo "Removed video metadata"
   echo "---------------------------------------"
   echo \n
 done
