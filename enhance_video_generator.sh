@@ -48,6 +48,9 @@ saturation=$(awk -v min=1 -v max=2 'BEGIN{srand(); print min+rand()*(max-min)}')
 gamma=$(awk -v min=0.8 -v max=1.5 'BEGIN{srand(); print min+rand()*(max-min)}')
 sharpen_amount=$(awk -v min=0.5 -v max=2 'BEGIN{srand(); print min+rand()*(max-min)}')
 
+# Generate a random number between 10 and 50
+random_crop=$((10 + RANDOM % 41))
+
   # Generate a random scaling factor between -100 and +100 for the width
   scale_factor=$((RANDOM % 201 - 100))  # Random number between -100 and 100
   
@@ -71,12 +74,15 @@ echo "Saturation: $saturation"
 echo "Gamma: $gamma"
 echo "Sharpness: $sharpen_amount"
 echo "width: $new_width"
+echo "cropped by $random_crop"
 
 # Generate FFmpeg filter string with random values
 filter="scale=$new_width:-2,eq=brightness=$brightness:contrast=$contrast:saturation=$saturation:gamma=$gamma,unsharp=luma_msize_x=7:luma_msize_y=7:luma_amount=$sharpen_amount"
 
+crop="crop=iw-$(($random_crop*2)):ih-$(($random_crop*2)):$(($random_crop)):$(($random_crop))"
+
 # Apply FFmpeg filter to the video
-ffmpeg -loglevel warning -i "$input_video" -vf "$filter" -c:v libx264 -crf 18 -preset fast "$output_video"
+ffmpeg -loglevel warning -i "$input_video" -an -vf "$filter,$crop" -c:v libx264 -crf 18 -preset fast "$output_video"
 
 # Remove metadata
 exiftool -all= -overwrite_original "$output_video"
